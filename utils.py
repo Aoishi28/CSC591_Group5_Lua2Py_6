@@ -164,6 +164,40 @@ def bin(col,x):
     tmp = (col.hi - col.lo)/(the['bins'] - 1)
     return  1 if col.hi == col.lo else math.floor(x/tmp + .5)*tmp
 
+def merges(ranges0,nSmall,nFar):
+
+    def noGaps(t):
+        for j in range(1,len(t)+1):
+            t[j]['lo'] = t[j-1]['hi']
+        t[0]['lo'] = -math.inf
+        t[len(t)-1]['hi'] = math.inf
+        return t
+
+    def try2Merge(left,right,j):
+        y = merged(left['y'],right['y'],nSmall,nFar)
+        if y:
+            j = j+1
+            left['hi'] , left['y'] = right['hi'], y
+        return j,left
+    
+    ranges1, j, here = [], 1, None
+    while j <= len(ranges0):
+        here = ranges0[j-1]
+        if j < len(ranges0):
+            j, here = try2Merge(here, ranges0[j], j)
+        j += 1
+        ranges1.append(here)
+    return (len(ranges0) == len(ranges1) and noGaps(ranges0)) or merges(ranges1, nSmall, nFar)
+
+def merged(col1,col2,nSmall,nFar):
+    new = merge(col1,col2)
+    if nSmall and col1['n'] < nSmall or col2.n < nSmall:
+        return new
+    if nFar and not col1.isSym and abs(col1.mid() - col2.mid()) <nFar:
+        return new
+    if new.div() <= (col1.div() * col1['n'] + col2.div() * col2['n']) / new['n']:
+        return new
+
 def merge(col1,col2):
   new = deepcopy(col1)
   if isinstance(col1, SYM):
@@ -216,28 +250,3 @@ def value(has,nB = None, nR = None, sGoal = None):
     return b**2/(b+r)
 
 
-def merge2(col1,col2):
-  new = merge(col1,col2)
-  if new.div() <= (col1.div()*col1.n + col2.div()*col2.n)/new.n:
-    return new
-
-def mergeAny(ranges0):
-    def noGaps(t):
-        for j in range(1,len(t)):
-            t[j]['lo'] = t[j-1]['hi']
-        t[0]['lo']  = float("-inf")
-        t[len(t)-1]['hi'] =  float("inf")
-        return t
-
-    ranges1,j = [],0
-    while j <= len(ranges0)-1:
-        left = ranges0[j]
-        right = None if j == len(ranges0)-1 else ranges0[j+1]
-        if right:
-            y = merge2(left['y'], right['y'])
-            if y:
-                j = j+1
-                left['hi'], left['y'] = right['hi'], y
-        ranges1.append(left)
-        j = j+1
-    return noGaps(ranges0) if len(ranges0)==len(ranges1) else mergeAny(ranges1)
