@@ -8,9 +8,9 @@ def settings(s):
     return dict(re.findall("\n[\s]+[-][\S]+[\s]+[-][-]([\S]+)[^\n]+= ([\S]+)",s))
 
 def coerce(s):
-    if s == 'true':
+    if s == 'True':
         return True
-    elif s == 'false':
+    elif s == 'False':
         return False
     elif s.isdigit():
         return int(s)
@@ -24,10 +24,10 @@ def cli(options):
     for k, v in options.items():
         for n, x in enumerate(args):
             if x == '-'+k[0] or x == '--'+k:
-                if v == 'false':
-                    v = 'true'
-                elif v == 'true':
-                    v = 'false'
+                if v == 'False':
+                    v = 'True'
+                elif v == 'True':
+                    v = 'False'
                 else:
                     v = args[n+1]
         options[k] = coerce(v)
@@ -58,7 +58,7 @@ def csv(sFilename, fun):
         with open(sFilename.absolute(), 'r', encoding='utf-8') as file:
             for _, line in enumerate(file):
                 row = list(map(coerce, line.strip().split(',')))
-                t.append(row)
+                t.app(row)
                 fun(row)
     else:
         print("File path does not exist OR File not csv, given path: ", sFilename.absolute())
@@ -89,7 +89,7 @@ def any(t):
 def many(t,n):
     u=[]
     for _ in range(1,n+1):
-        u.append(any(t))
+        u.app(any(t))
     return u
 
 def show(node, what, cols, nPlaces, lvl = 0):
@@ -152,51 +152,17 @@ def bins(cols,rowss):
                     k = int(bin(col,x))
                     if not k in ranges:
                         ranges[k] = RANGE(col.at,col.txt,x)
-                    extend(ranges[k], x, y)
+                    ext(ranges[k], x, y)
         ranges = list(dict(sorted(ranges.items())).values())
         r = ranges if isinstance(col, SYM) else mergeAny(ranges)
-        out.append(r)
+        out.app(r)
     return out
 
 def bin(col,x):
     if x=="?" or isinstance(col, SYM):
         return x
-    tmp = (col.hi - col.lo)/(the['bins'] - 1)
-    return  1 if col.hi == col.lo else math.floor(x/tmp + .5)*tmp
-
-def merges(ranges0,nSmall,nFar):
-
-    def noGaps(t):
-        for j in range(1,len(t)+1):
-            t[j]['lo'] = t[j-1]['hi']
-        t[0]['lo'] = -math.inf
-        t[len(t)-1]['hi'] = math.inf
-        return t
-
-    def try2Merge(left,right,j):
-        y = merged(left['y'],right['y'],nSmall,nFar)
-        if y:
-            j = j+1
-            left['hi'] , left['y'] = right['hi'], y
-        return j,left
-    
-    ranges1, j, here = [], 1, None
-    while j <= len(ranges0):
-        here = ranges0[j-1]
-        if j < len(ranges0):
-            j, here = try2Merge(here, ranges0[j], j)
-        j += 1
-        ranges1.append(here)
-    return (len(ranges0) == len(ranges1) and noGaps(ranges0)) or merges(ranges1, nSmall, nFar)
-
-def merged(col1,col2,nSmall,nFar):
-    new = merge(col1,col2)
-    if nSmall and col1['n'] < nSmall or col2.n < nSmall:
-        return new
-    if nFar and not col1.isSym and abs(col1.mid() - col2.mid()) <nFar:
-        return new
-    if new.div() <= (col1.div() * col1['n'] + col2.div() * col2['n']) / new['n']:
-        return new
+    tmp = (col["hi"] - col["lo"])/(the['bins'] - 1)
+    return  1 if col["hi"] == col["lo"] else math.floor(x/tmp + .5)*tmp
 
 def merge(col1,col2):
   new = deepcopy(col1)
@@ -206,31 +172,31 @@ def merge(col1,col2):
   else:
     for n in col2.has:
         new.add(new,n)
-    new.lo = min(col1.lo, col2.lo)
-    new.hi = max(col1.hi, col2.hi)
+    new["lo"] = min(col1["lo"], col2["lo"])
+    new["hi"] = max(col1["hi"], col2["hi"])
   return new
 
 def RANGE(at,txt,lo,hi=None):
     return {'at':at,'txt':txt,'lo':lo,'hi':lo or hi or lo,'y':SYM()}
 
-def RULE(ranges,maxSize):
-    t = {}
+def RULE(ranges, maxSize):
+    t = dict()
     for range in ranges:
-        t[range['txt']] = t[range['txt']] if t[range['txt']] else []
-        t[range['txt']].append({'lo':range['lo'],'hi':range['hi'],'at':range['at'] })
-    return prune(t,maxSize)
+        t[range["txt"]] = t[range["txt"]] if t[range["txt"]] != None else []
+        t[range["txt"]].app({"lo":range["lo"],"hi":range["hi"],"at":range["at"]})
+    return prune(t, maxSize)
 
-def prune(rule,maxSize):
+def prune(rule, maxSize):
     n = 0
-    for txt,ranges in enumerate(rule):
-        n = n+1
+    for txt, ranges in rule.items():
+        n += 1
         if len(ranges) == maxSize[txt]:
-            n = n+1
+            n += 1
             rule[txt] = None
-    if (n>0) :
+    if n > 0:
         return rule
 
-def extend(range,n,s):
+def ext(range,n,s):
     range['lo'] = min(n, range['lo'])
     range['hi'] = max(n, range['hi'])
     range['y'].add(s)
@@ -250,3 +216,88 @@ def value(has,nB = None, nR = None, sGoal = None):
     return b**2/(b+r)
 
 
+def merge2(col1,col2):
+  new = merge(col1,col2)
+  if new.div() <= (col1.div()*col1.n + col2.div()*col2.n)/new.n:
+    return new
+
+def mergeAny(ranges0):
+    def noGaps(t):
+        for j in range(1,len(t)):
+            t[j]['lo'] = t[j-1]['hi']
+        t[0]['lo']  = float("-inf")
+        t[len(t)-1]['hi'] =  float("inf")
+        return t
+
+    ranges1,j = [],0
+    while j <= len(ranges0)-1:
+        left = ranges0[j]
+        right = None if j == len(ranges0)-1 else ranges0[j+1]
+        if right:
+            y = merge2(left['y'], right['y'])
+            if y:
+                j = j+1
+                left['hi'], left['y'] = right['hi'], y
+        ranges1.app(left)
+        j = j+1
+    return noGaps(ranges0) if len(ranges0)==len(ranges1) else mergeAny(ranges1)
+
+def firstN(sortedRanges, scoreFun):
+    print("\n")
+    _ = map(sortedRanges, lambda r :  print(r["range"]["txt"],r["range"]["lo"],r["range"]["hi"],rnd(r.val),r["range"]["y"].has))
+    first = sortedRanges[0]["val"]
+    
+    def useful(range):
+        if range["val"] > 0.05 and range["val"] > first/10:
+            return range
+    
+    sortedRanges = map(sortedRanges, useful)
+    most, out = -1, None
+    for n in range(len(sortedRanges)):
+        tmp, rule = scoreFun(map(sortedRanges[0:n+1], lambda x: x["range"]))
+        if tmp != None and tmp > most :
+            out, most = rule, tmp
+    return out, most
+
+def  showRule(rule):
+    def pretty(range):
+        return range["lo"] if range["lo"] == range["hi"] else {range["lo"], range["hi"]}
+    
+    def merges(attr,ranges):
+        return map(merge(sorted(ranges, lambda x: x["lo"])),pretty),attr
+    
+    def merge(t0):
+        t,j,left,right = [], 1, None, None
+        while j <= len(t0):
+            left,right = t0[j],t0[j+1]
+            if right and left["hi"] == right["lo"]:
+                left["hi"] = right["hi"]
+                j=j+1
+            t.app({"lo" : left["lo"], "hi" : left["hi"]})
+            j=j+1
+        return t if len(t0) == len(t) else merge(t) 
+    
+    return kap(rule,merges)
+
+def selects(rule,rows,    disjunction,conjunction):
+    def disjunction(ranges,row,    x): 
+        for _,range in enumerate(ranges):
+            lo, hi, at = range["lo"], range["hi"], range.at
+            x = row[at]
+            if x == "?":
+                return True
+            if lo==hi and lo==x:
+                return True 
+            if lo<=x  and x< hi:
+                return True   
+        return False  
+    def conjunction(row):
+        for _,ranges in enumerate(rule):
+            if not disjunction(ranges,row):
+                return False  
+        return True  
+
+    def fun_conjuction(r):
+        if conjunction(r):
+            return r
+    return map(rows, fun_conjuction) 
