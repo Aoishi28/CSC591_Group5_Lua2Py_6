@@ -52,3 +52,5 @@ class NUM:
         if n2 == "?":
             n2 = 1 if n1 < 0.5 else 0
         return abs(n1 - n2)
+
+
