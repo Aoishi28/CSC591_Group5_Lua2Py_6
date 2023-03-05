@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import sys
 sys.path.append("./src")
-from utils import *
-from test_utils import *
 
+from test_utils import *
 def main():
     y,n,saved = 0,0,deepcopy(the)
     for k,v in cli(settings(help)).items():
@@ -29,7 +28,7 @@ def main():
     sys.exit(n)
 
 if __name__ == '__main__':
-    eg('Is', 'show options', test_the)
+    eg('the', 'show options', test_the)
     eg('rand', 'demo random number generation', test_rand)
     eg('some', 'demo of reservoir sampling', test_some)
     eg('nums', 'demo of NUM', test_num)
@@ -37,12 +36,10 @@ if __name__ == '__main__':
     eg('csv', 'reading csv files', test_csv)
     eg('data', 'showing DATA sets', test_data)
     eg('clone', 'replicate structure of a DATA', test_clone)
-    eg('cliffs', 'stats tests', test_cliffs)
+    eg('cliffs', 'start tests', test_cliffs)
     eg('dist', 'distance test', test_dist)
-    eg('half', 'divide data in half', test_half)
     eg('tree', 'make snd show tree of clusters', test_tree)
     eg('sway', 'optimizing', test_sway)
     eg('bins', 'find deltas between best and rest', test_bins)
     eg('xpln', 'explore explanation sets', test_xpln)
-
     main()

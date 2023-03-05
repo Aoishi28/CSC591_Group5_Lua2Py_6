@@ -1,6 +1,6 @@
 import math
 from utils import rnd
-from the import *
+from the import the
 
 class NUM:
     def __init__(self, at=0, txt=""):

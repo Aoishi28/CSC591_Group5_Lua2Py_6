@@ -8,9 +8,9 @@ def settings(s):
     return dict(re.findall("\n[\s]+[-][\S]+[\s]+[-][-]([\S]+)[^\n]+= ([\S]+)",s))
 
 def coerce(s):
-    if s == 'True':
+    if s == 'true':
         return True
-    elif s == 'False':
+    elif s == 'false':
         return False
     elif s.isdigit():
         return int(s)
@@ -24,10 +24,10 @@ def cli(options):
     for k, v in options.items():
         for n, x in enumerate(args):
             if x == '-'+k[0] or x == '--'+k:
-                if v == 'False':
-                    v = 'True'
-                elif v == 'True':
-                    v = 'False'
+                if v == 'false':
+                    v = 'true'
+                elif v == 'true':
+                    v = 'false'
                 else:
                     v = args[n+1]
         options[k] = coerce(v)
@@ -58,7 +58,7 @@ def csv(sFilename, fun):
         with open(sFilename.absolute(), 'r', encoding='utf-8') as file:
             for _, line in enumerate(file):
                 row = list(map(coerce, line.strip().split(',')))
-                t.app(row)
+                t.append(row)
                 fun(row)
     else:
         print("File path does not exist OR File not csv, given path: ", sFilename.absolute())
@@ -72,16 +72,17 @@ def kap(t, fun):
         u[k or len(u)] = v
     return u
 
+def dkap(t, fun):
+    u = {}
+    for k,v in t.items():
+        v, k = fun(k,v)
+        u[k or len(u)] = v
+    return u
+
 def cosine(a,b,c):
     den = 1 if c == 0 else 2*c
     x1 = (a**2 + c**2 - b**2) / den
-    x2 = max(0, min(1, x1))
-    y  = abs((a**2 - x2**2))**.5
-    if isinstance(y, complex):
-        print('a', a)
-        print('x1', x1)
-        print('x2', x2)
-    return x2, y
+    return x1
 
 def any(t):
     return t[rint(0, len(t) - 1)]
@@ -89,7 +90,7 @@ def any(t):
 def many(t,n):
     u=[]
     for _ in range(1,n+1):
-        u.app(any(t))
+        u.append(any(t))
     return u
 
 def show(node, what, cols, nPlaces, lvl = 0):
@@ -152,17 +153,17 @@ def bins(cols,rowss):
                     k = int(bin(col,x))
                     if not k in ranges:
                         ranges[k] = RANGE(col.at,col.txt,x)
-                    ext(ranges[k], x, y)
+                    extend(ranges[k], x, y)
         ranges = list(dict(sorted(ranges.items())).values())
         r = ranges if isinstance(col, SYM) else mergeAny(ranges)
-        out.app(r)
+        out.append(r)
     return out
 
 def bin(col,x):
     if x=="?" or isinstance(col, SYM):
         return x
-    tmp = (col["hi"] - col["lo"])/(the['bins'] - 1)
-    return  1 if col["hi"] == col["lo"] else math.floor(x/tmp + .5)*tmp
+    tmp = (col.hi - col.lo)/(the['bins'] - 1)
+    return  1 if col.hi == col.lo else math.floor(x/tmp + .5)*tmp
 
 def merge(col1,col2):
   new = deepcopy(col1)
@@ -172,31 +173,14 @@ def merge(col1,col2):
   else:
     for n in col2.has:
         new.add(new,n)
-    new["lo"] = min(col1["lo"], col2["lo"])
-    new["hi"] = max(col1["hi"], col2["hi"])
+    new.lo = min(col1.lo, col2.lo)
+    new.hi = max(col1.hi, col2.hi)
   return new
 
 def RANGE(at,txt,lo,hi=None):
     return {'at':at,'txt':txt,'lo':lo,'hi':lo or hi or lo,'y':SYM()}
 
-def RULE(ranges, maxSize):
-    t = dict()
-    for range in ranges:
-        t[range["txt"]] = t[range["txt"]] if t[range["txt"]] != None else []
-        t[range["txt"]].app({"lo":range["lo"],"hi":range["hi"],"at":range["at"]})
-    return prune(t, maxSize)
-
-def prune(rule, maxSize):
-    n = 0
-    for txt, ranges in rule.items():
-        n += 1
-        if len(ranges) == maxSize[txt]:
-            n += 1
-            rule[txt] = None
-    if n > 0:
-        return rule
-
-def ext(range,n,s):
+def extend(range,n,s):
     range['lo'] = min(n, range['lo'])
     range['hi'] = max(n, range['hi'])
     range['y'].add(s)
@@ -238,66 +222,35 @@ def mergeAny(ranges0):
             if y:
                 j = j+1
                 left['hi'], left['y'] = right['hi'], y
-        ranges1.app(left)
+        ranges1.append(left)
         j = j+1
     return noGaps(ranges0) if len(ranges0)==len(ranges1) else mergeAny(ranges1)
-
-def firstN(sortedRanges, scoreFun):
-    print("\n")
-    _ = map(sortedRanges, lambda r :  print(r["range"]["txt"],r["range"]["lo"],r["range"]["hi"],rnd(r.val),r["range"]["y"].has))
-    first = sortedRanges[0]["val"]
-    
+def firstN(sortedRanges,scoreFun):
+    print("")
+    def function(r):
+        print(r['range']['txt'],r['range']['lo'],r['range']['hi'],rnd(r['val']),r['range']['y'].has)
+    _ = list(map(function, sortedRanges))
+    print()
+    first = sortedRanges[0]['val']
     def useful(range):
-        if range["val"] > 0.05 and range["val"] > first/10:
+        if range['val']>.05 and range['val']> first/10:
             return range
-    
-    sortedRanges = map(sortedRanges, useful)
-    most, out = -1, None
-    for n in range(len(sortedRanges)):
-        tmp, rule = scoreFun(map(sortedRanges[0:n+1], lambda x: x["range"]))
-        if tmp != None and tmp > most :
-            out, most = rule, tmp
-    return out, most
+    sortedRanges = [x for x in sortedRanges if useful(x)]
+    most,out = -1, -1
+    for n in range(1,len(sortedRanges)+1):
+        slice = sortedRanges[0:n]
+        slice_range = [x['range'] for x in slice]
+        tmp,rule = scoreFun(slice_range)
+        if tmp and tmp > most:
+            out,most = rule,tmp
+    return out,most
 
-def  showRule(rule):
-    def pretty(range):
-        return range["lo"] if range["lo"] == range["hi"] else {range["lo"], range["hi"]}
-    
-    def merges(attr,ranges):
-        return map(merge(sorted(ranges, lambda x: x["lo"])),pretty),attr
-    
-    def merge(t0):
-        t,j,left,right = [], 1, None, None
-        while j <= len(t0):
-            left,right = t0[j],t0[j+1]
-            if right and left["hi"] == right["lo"]:
-                left["hi"] = right["hi"]
-                j=j+1
-            t.app({"lo" : left["lo"], "hi" : left["hi"]})
-            j=j+1
-        return t if len(t0) == len(t) else merge(t) 
-    
-    return kap(rule,merges)
-
-def selects(rule,rows,    disjunction,conjunction):
-    def disjunction(ranges,row,    x): 
-        for _,range in enumerate(ranges):
-            lo, hi, at = range["lo"], range["hi"], range.at
-            x = row[at]
-            if x == "?":
-                return True
-            if lo==hi and lo==x:
-                return True 
-            if lo<=x  and x< hi:
-                return True   
-        return False  
-    def conjunction(row):
-        for _,ranges in enumerate(rule):
-            if not disjunction(ranges,row):
-                return False  
-        return True  
-
-    def fun_conjuction(r):
-        if conjunction(r):
-            return r
-    return map(rows, fun_conjuction) 
+def prune(rule, maxSize):
+    n=0
+    for txt,ranges in rule.items():
+        n = n+1
+        if len(ranges) == maxSize[txt]:
+            n=n+1
+            rule[txt] = None
+    if n > 0:
+        return rule

@@ -37,14 +37,6 @@ a 1.379
 ▶️  dist ------------------------------------------------------------
 {'lo': 0.0, 'hi': 0.9022161422721422, 'mid': 0.52, 'div': 0.26}
 ✅ pass: dist
-▶️  half ------------------------------------------------------------
-199 199
-[6, 258, 95, 3193, 17.8, 76, 1, 20] 0.5737558524015601
-[4, 151, 85, 2855, 17.6, 78, 1, 20]
-[4, 119, 97, 2300, 14.7, 78, 3, 30]
-l {'Lbs-': 3593.09, 'Acc+': 14.71, 'Mpg+': 18.14}
-r {'Lbs-': 2347.76, 'Acc+': 16.43, 'Mpg+': 29.55}
-✅ pass: half
 ▶️  tree ------------------------------------------------------------
 [398]  {'Lbs-': 2970.4, 'Acc+': 15.6, 'Mpg+': 23.8}
 |.. [199]
@@ -110,4 +102,50 @@ origin	1	 1	 0.0	      {:rest 33}
 origin	2	 2	 0.0	      {:rest 8}
 origin	3	 3	 0.87	     {:best 12 :rest 7}
 ✅ pass: bins
+▶️  xpln ------------------------------------------------------------
+
+Clndrs  -inf  4
+Clndrs  4  inf
+
+Volume  -inf  90
+Volume   90  115
+Volume  115  inf
+
+Model    -inf  76
+Model    76  79
+Model    79  80
+Model    80  inf
+
+origin  1  1
+origin  2  2
+origin  3  3
+
+origin     3  3   0.87  {:best 12 :rest 7}
+Clndrs  -inf  4   0.72  {:best 12 :rest 19}
+Volume  -inf  90  0.69  {:best 9 :rest 3}
+Model    79  80   0.43  {:best 6 :rest 4}
+Model    76  79   0.36  {:best 6 :rest 9}
+Volume   90  115  0.17  {:best 3 :rest 6}
+origin   2  2     0.0           {:rest 8}
+origin   1  1     0.0          {:rest 33}
+Volume  115  inf  0.0          {:rest 39}
+Model  80  inf    0.0           {:rest 8}
+Clndrs  4  inf    0.0          {:rest 29}
+Model  -inf  76   0.0          {:rest 27}
+
+{:origin {3}}
+{:Clndrs {{-inf 4}} :origin {3}}
+{:Clndrs {{-inf 4}} :Volume {{-inf 90}} :origin {3}}
+{:Clndrs {{-inf 4}} :Model {{79 80}} :Volume {{-inf 90}} :origin {3}}
+{:Clndrs {{-inf 4}} :Model {{76 80}} :Volume {{-inf 90}} :origin {3}}
+{:Clndrs {{-inf 4}} :Model {{76 80}} :Volume {{-inf 115}} :origin {3}}
+
+-----------
+explain=  {:origin {3}}
+all                 {:Acc+ 15.5 :Lbs- 2800.0 :Mpg+ 20.0 :N 398}  {:Acc+ 2.71 :Lbs- 887.21 :Mpg+ 7.75 :N 398}
+sway with     6 evals  {:Acc+ 16.6 :Lbs- 2019.0 :Mpg+ 40.0 :N 12}  {:Acc+ 2.6 :Lbs- 129.84 :Mpg+ 7.75 :N 12}
+xpln on       6 evals  {:Acc+ 16.4 :Lbs- 2155.0 :Mpg+ 30.0 :N 79}  {:Acc+ 2.13 :Lbs- 349.61 :Mpg+ 7.75 :N 79}
+sort with   398 evals  {:Acc+ 18.8 :Lbs- 1985.0 :Mpg+ 40.0 :N 12}  {:Acc+ 2.48 :Lbs- 200.39 :Mpg+ 0.0 :N 12}
+Footer
+✅ pass: xpln
 🔆 {'pass': 14, 'fail': 0, 'success': 100.0}
