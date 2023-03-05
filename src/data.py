@@ -51,26 +51,31 @@ class DATA:
         return sorted(list(map(function, rows or self.rows)), key=itemgetter('dist'))
 
     def half(self, rows=None, cols=None, above=None):
-        def dist(row1, row2):
+        def gap(row1, row2):
             return self.dist(row1, row2, cols)
+
+        def project(row):
+            return {'row': row, 'dist': cosine(gap(row, A), gap(row, B), c)}
 
         rows = rows or self.rows
         some = many(rows, the['Halves'])
-        A = above or any(some)
-        B = self.around(A, some)[int(the['Far'] * len(rows)) // 1]['row']
-        c = dist(A, B)
+        A = above if above and the['Reuse'] else any(some)
+
+        def function(r):
+            return {'row': r, 'dist': gap(r, A)}
+
+        tmp = sorted(list(map(function, some)), key=itemgetter('dist'))
+        far = tmp[int(the['Far'] * len(rows)) // 1]
+        B = far['row']
+        c = far['dist']
         left, right = [], []
-
-        def project(row):
-            return {'row': row, 'dist': cosine(dist(row, A), dist(row, B), c)}
-
         for n, tmp in enumerate(sorted(list(map(project, rows)), key=itemgetter('dist'))):
             if n < len(rows) // 2:
                 left.append(tmp['row'])
-                mid = tmp['row']
             else:
                 right.append(tmp['row'])
-        return left, right, A, B, mid, c
+        evals = 1 if the['Reuse'] and above else 2
+        return left, right, A, B, c, evals
 
     def cluster(self, rows=None, min=None, cols=None, above=None):
         rows = rows or self.rows
@@ -98,7 +103,7 @@ class DATA:
         cols = cols or self.cols.x
         node = {'data': self.clone(rows)}
         if len(rows) >= 2 * min:
-            left, right, node['A'], node['B'], node['mid'], _ = self.half(rows, cols, above)
+            left, right, node['A'], node['B'], _, _ = self.half(rows, cols, above)
             node['left'] = self.tree(left, min, cols, node['A'])
             node['right'] = self.tree(right, min, cols, node['B'])
         return node
@@ -119,31 +124,87 @@ class DATA:
 
         best, rest, evals = worker(data.rows, [], 0)
         return self.clone(best), self.clone(rest), evals
-    
+
+    def RULE(self, ranges, maxSize):
+        t = {}
+        for range in ranges:
+            t[range['txt']] = t.get(range['txt']) or []
+            t[range['txt']].append({'lo': range['lo'], 'hi': range['hi'], 'at': range['at']})
+        return prune(t, maxSize)
+
+    def showRule(self, rule):
+        def pretty(range):
+            return range['lo'] if range['lo'] == range['hi'] else [range['lo'], range['hi']]
+
+        def merge(t0):
+            t, j = [], 1
+            while j <= len(t0):
+                left = t0[j - 1]
+                if j < len(t0):
+                    right = t0[j]
+                else:
+                    right = None
+                if right and left['hi'] == right['lo']:
+                    left['hi'] = right['hi']
+                    j = j + 1
+                t.append({'lo': left['lo'], 'hi': left['hi']})
+                j = j + 1
+            return t if len(t0) == len(t) else merge(t)
+
+        def merges(attr, ranges):
+            return list(map(pretty, merge(sorted(ranges, key=itemgetter('lo'))))), attr
+
+        return dkap(rule, merges)
+
     def xpln(self, best, rest):
-    
+        tmp, maxSizes = [], {}
+
         def v(has):
             return value(has, len(best.rows), len(rest.rows), "best")
-        
-        def score(ranges, maxSizes):
-            rule = RULE(ranges, maxSizes)
+
+        def score(ranges):
+            rule = self.RULE(ranges, maxSizes)
             if rule:
-                print(showRule(rule))
-                bestr = selects(rule, best.rows)
-                restr = selects(rule, rest.rows)
-                if len(bestr) + len(restr) > 0 :
-                    return v({best : len(bestr), rest : len(restr)}), rule
-        
-        tmp, maxSizes = [], dict()
-        for ranges in bins(self.cols.x,{"best" : best.rows, "rest" : rest.rows}):
-            maxSizes[ranges[1]["txt"]] = len(ranges)
-            print("\n")
+                print(self.showRule(rule))
+                bestr = self.selects(rule, best.rows)
+                restr = self.selects(rule, rest.rows)
+                if len(bestr) + len(restr) > 0:
+                    return v({'best': len(bestr), 'rest': len(restr)}), rule
+
+        for ranges in bins(self.cols.x, {'best': best.rows, 'rest': rest.rows}):
+            maxSizes[ranges[1]['txt']] = len(ranges)
+            print("")
             for range in ranges:
-                print(range["txt"], range["lo"], range["hi"])
-                tmp.append({"range" : range, "max" : len(ranges), "val" : v(range["y"].has)})
-        rule, most = firstN(sorted(tmp, key = lambda x: x["val"]), score)
+                print(range['txt'], range['lo'], range['hi'])
+                tmp.append({'range': range, 'max': len(ranges), 'val': v(range['y'].has)})
+        rule, most = firstN(sorted(tmp, key=itemgetter('val')), score)
         return rule, most
 
+    def betters(self, n):
+        tmp = sorted(self.rows, key=lambda row: self.better(row, self.rows[self.rows.index(row) - 1]))
+        return n and tmp[0:n], tmp[n + 1:] or tmp
 
+    def selects(self, rule, rows):
+        def disjunction(ranges, row):
+            for range in ranges:
+                lo, hi, at = range['lo'], range['hi'], range['at']
+                x = row.cells[at]
+                if x == "?":
+                    return True
+                if lo == hi and lo == x:
+                    return True
+                if lo <= x and x < hi:
+                    return True
+            return False
 
+        def conjunction(row):
+            for ranges in rule.values():
+                if not disjunction(ranges, row):
+                    return False
+            return True
 
+        def function(r):
+            if conjunction(r):
+                return r
+
+        return list(map(function, rows))
