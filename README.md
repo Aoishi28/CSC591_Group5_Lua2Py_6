@@ -6,7 +6,7 @@
   
 ## Migrating LUA CodeBase to Python
 
-[![DOI](https://zenodo.org/badge/602795648.svg)](https://zenodo.org/badge/latestdoi/602795648)
+[![DOI](https://zenodo.org/badge/607436756.svg)](https://zenodo.org/badge/latestdoi/607436756)
 
 
 [![license](https://img.shields.io/github/license/Aoishi28/CSC591_Group5_Lua2Py_6?style=plastic)](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/blob/main/LICENSE.md)
