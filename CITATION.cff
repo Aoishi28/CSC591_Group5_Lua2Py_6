@@ -1,0 +1,14 @@
+cff-version: 1.0.0
+message: "Hello!! If you use this software, please cite it using the metadata from this file"
+title: "Basic Model"
+abstract: "This is the working model having classes and functions converted from lua codebase to python"
+authors:
+  - family-names: Joshi
+    given-names: Ashish
+  - family-names: Das
+    given-names: Aoishi
+  - family-names: Mohan
+    given-names: Swarnamalya
+version: "1.0.1"
+date-released: "03/05/2023"
+doi: 10.5281/zenodo.7700575
