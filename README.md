@@ -12,9 +12,7 @@
 [![license](https://img.shields.io/github/license/Aoishi28/CSC591_Group5_Lua2Py_6?style=plastic)](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/blob/main/LICENSE.md)
 [![language](https://img.shields.io/github/languages/top/Aoishi28/CSC591_Group5_Lua2Py_6)](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/search?l=python)<br/>
  
-[![Tests](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/actions/workflows/test.yaml/badge.svg)](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/actions/workflows/test.yaml)
-[![Python Style Checker](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/actions/workflows/python_style_checker.yml/badge.svg)](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/actions/workflows/python_style_checker.yml)
-[![Python Syntax Checker](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/actions/workflows/python_syntax_checker.yml/badge.svg)](https://github.comAoishi28/CSC591_Group5_Lua2Py_6/actions/workflows/python_syntax_checker.yml)
+
 [![Pylint](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/actions/workflows/pylint.yaml/badge.svg)](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/actions/workflows/pylint.yaml)
 
 [![GitHub issues](https://img.shields.io/github/issues-raw/Aoishi28/CSC591_Group5_Lua2Py_6?style=plastic)](https://github.com/Aoishi28/CSC591_Group5_Lua2Py_6/issues)
